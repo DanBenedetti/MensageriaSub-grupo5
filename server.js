@@ -1,12 +1,14 @@
 const express = require('express');
 const db = require('./BD/database');
+const { formatOrders } = require('./utils/orderFormatter'); 
 const app = express();
 const port = 3000;
 
 app.get('/orders', async (req, res) => {
   try {
     // 1. Captura os parâmetros da URL (Query Params)
-    const { uuid, codigoCliente, status, product_name, pagina } = req.query;
+    
+    const { uuid, codigoCliente, status, product_name, produto_id, pagina } = req.query;
 
     // 1.1. Converte para número (base 10)
     let numPagina = parseInt(pagina, 10);
@@ -54,13 +56,12 @@ app.get('/orders', async (req, res) => {
       queryText += ` AND p.status = $${params.length}`;
     }
     if (product_name) {
-      params.push(`%${product_name}%`); // Usamos % para buscas parciais (LIKE)
-      queryText += ` AND prod.nome ILIKE $${params.length}`; // ILIKE ignora maiúsculas/minúsculas
+      params.push(`%${product_name}%`);
+      queryText += ` AND prod.nome ILIKE $${params.length}`;
     }
-
     if (produto_id) {
       params.push(produto_id);
-      queryText += ` AND ip.produto_id = $${params.length}`;
+      queryText += ` AND prod.id = $${params.length}`;
     }
 
     // 4. Ordenação e Paginação
@@ -69,8 +70,9 @@ app.get('/orders', async (req, res) => {
     // 5. Execução no Banco
     const resultado = await db.query(queryText, params);
 
-    // 6. Resposta
-    res.json(resultado.rows);
+    // 6. "Lapidando" os dados antes do envio final
+    const pedidosFormatados = formatOrders(resultado.rows);
+    res.json(pedidosFormatados);
 
   } catch (erro) {
     console.error(erro);
