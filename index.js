@@ -36,7 +36,10 @@ function listenForMessages() {
       ]);
 
       // 3. Persistir Pedido
-      // Nota: A "data_indexacao" será preenchida pelo próprio PostgreSQL
+      // Tentamos pegar a data de 'created at' ou 'created_at'. 
+      // Se não houver nenhuma, usamos a data atual para não falhar a restrição NOT NULL.
+      const dataCriacao = payload['created at'] || payload['created_at'] || new Date();
+
       const queryPedido = `
         INSERT INTO pedidos (
           uuid, cliente_id, canal, status, data_criacao_payload, 
@@ -49,7 +52,7 @@ function listenForMessages() {
         payload.customer.id,
         payload.channel,
         payload.status,
-        payload['created at'], // O payload do PDF usa a chave com espaço
+        dataCriacao, 
         payload.seller.name,
         payload.seller.id,
         payload.seller.city,

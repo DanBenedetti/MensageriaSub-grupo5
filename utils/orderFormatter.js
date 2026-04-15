@@ -27,6 +27,7 @@ function formatOrders(rows) {
 
     // 3. Adiciona o item à lista do pedido
     currentOrder.items.push({
+      product_id: row.product_id,
       product_name: row.product_name,
       quantity: quantity,
       unit_price: unitPrice,
